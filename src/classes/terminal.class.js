@@ -7,6 +7,7 @@ class Terminal {
             const {AttachAddon} = require("xterm-addon-attach");
             const {FitAddon} = require("xterm-addon-fit");
             const {LigaturesAddon} = require("xterm-addon-ligatures");
+            const {WebglAddon} = require("xterm-addon-webgl");
             this.Ipc = require("electron").ipcRenderer;
 
             this.port = opts.port || 3000;
@@ -137,12 +138,15 @@ class Terminal {
             let fitAddon = new FitAddon();
             this.term.loadAddon(fitAddon);
             this.term.open(document.getElementById(opts.parentId));
+            this.term.loadAddon(new WebglAddon());
             let ligaturesAddon = new LigaturesAddon();
             this.term.loadAddon(ligaturesAddon);
             this.term.attachCustomKeyEventHandler(e => {
                 window.keyboard.keydownHandler(e);
                 return true;
             });
+            // Prevent soft-keyboard on touch devices #733
+            document.querySelectorAll('.xterm-helper-textarea').forEach(textarea => textarea.setAttribute('readonly', 'readonly'))
             this.term.focus();
 
             this.Ipc.send("terminal_channel-"+this.port, "Renderer startup");
@@ -289,7 +293,7 @@ class Terminal {
                     this.clipboard.didCopy = true;
                 },
                 paste: () => {
-                    this.write(electron.remote.clipboard.readText());
+                    this.write(remote.clipboard.readText());
                     this.clipboard.didCopy = false;
                 },
                 didCopy: false
